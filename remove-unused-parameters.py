@@ -15,6 +15,10 @@ class FunctionParameter:
         self.nMentions = 0
 
 # CursorKind.PARM_DECL
+# might be referred to in the topmost 
+# CursorKind.COMPOUND_STMT
+# by a
+# CursorKind.DECL_REF_EXPR
 
 class Function:
     Param = FunctionParameter
@@ -32,11 +36,37 @@ class Function:
             self.parameters[name].nMentions += 1
 
     def unmentionedParams(self):
-        return [ p for p in self.parameters.itervalues() if p.nMentions == 0 ]
+        return [p for p in self.parameters.itervalues() if p.nMentions == 0]
+
+def cursorIsFunction(c):
+    return c.kind in [CursorKind.CXX_METHOD, 
+                      CursorKind.FUNCTION_TEMPLATE,
+                      CursorKind.FUNCTION_DECL]
+
+from fileprinter import printf
 
 import sys
 inFilepath = sys.argv[1]
 translationUnit = getTransUnit(inFilepath, ['-xc++', '-std=c++98'])
 
+for diag in translationUnit.diagnostics:
+    printf('**** {}', diag)
+    for fix in diag.fixits:
+        printf(' ****     possible fix --> {}', fix)
+
 traverse(translationUnit.cursor, TreePrinter())
+
+class FunctionNamer(Observer):
+    def __init__(self):
+        super(FunctionNamer, self).__init__()
+
+    def observe(self, cursor):
+        if not cursorIsFunction(cursor):
+            return
+
+        printf('I have found a function named "{}" or "{}", if you like.', 
+               cursor.spelling, cursor.displayname)
+
+printf('\n')
+traverse(translationUnit.cursor, FunctionNamer())
 

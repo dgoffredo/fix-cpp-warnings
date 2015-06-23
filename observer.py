@@ -62,11 +62,14 @@ class TreePrinter(Observer):
         tokensRep = ' '.join('"{}"'.format(token.spelling) \
                              for token in c.get_tokens())
         semantic_parent = c.semantic_parent
-        self.printf('{}{} ({}) ({}) ({}) {}.{}({})-{}.{}({})',
+        definition = c.get_definition()
+        self.printf('{}{} ({}) ({}) (hash {}) (refs {}) ({}) {}.{}({})-{}.{}({})',
                     self.indent,
                     c.kind,
                     c.displayname,
                     c.type.kind, 
+                    c.canonical.hash,
+                    definition.hash if definition else '',
                     semantic_parent.displayname if semantic_parent else '',
                     c.extent.start.line,
                     c.extent.start.column,
