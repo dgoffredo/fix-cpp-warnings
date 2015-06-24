@@ -26,7 +26,12 @@ class Function:
         self.parameterMentions[cursor] = 0
 
     def mentionIfParam(self, cursor):
-        definition = HashableCursor(cursor.get_definition())
+        definition = cursor.get_definition()
+        if not definition:
+            return # Can't see what this ref refers to.
+
+        definition = HashableCursor(definition)
+
         if definition in self.parameterMentions:
             self.parameterMentions[definition] += 1
 
@@ -51,26 +56,12 @@ from fileprinter import printf
 
 import sys
 inFilepath = sys.argv[1]
-translationUnit = getTransUnit(inFilepath, ['-xc++', '-std=c++98'])
+# hackyHackyFlaggyFlaggy = ['-I.']
+hackyHackyFlaggyFlaggy = [ '-I/home/dgoffred/mbig/git/dlib/dlibstor', '-I/home/dgoffred/mbig/git/dlib/docsource', '-I/home/dgoffred/mbig/git/dlib/services', '-I/home/dgoffred/mbig/git/dlib/tools', '-I/home/dgoffred/mbig/git/dlib/mk', '-I/home/dgoffred/mbig/git/dlib/dlibtskutil', '-I/home/dgoffred/mbig/git/dlib/build', '-I/home/dgoffred/mbig/git/dlib/dlibcoredbacc', '-I/home/dgoffred/mbig/git/dlib/dlibiboxclient', '-I/home/dgoffred/mbig/git/dlib/dlibdbacc', '-I/home/dgoffred/mbig/git/dlib/dlibdealtypes', '-I/home/dgoffred/mbig/git/dlib/dlibexternal', '-I/home/dgoffred/mbig/git/dlib/dlibpdfgen', '-I/home/dgoffred/mbig/git/dlib/dlibui', '-I/home/dgoffred/mbig/git/dlib/dliblisted', '-I/home/dgoffred/mbig/git/dlib/dlibmkteqcore', '-I/home/dgoffred/mbig/git/dlib/dlibuitypes', '-I/home/dgoffred/mbig/git/dlib/m_dlibst', '-I/home/dgoffred/mbig/git/dlib/m_ibox', '-I/home/dgoffred/mbig/git/dlib/test', '-I/home/dgoffred/mbig/git/dlib/dlibbbcache', '-I/home/dgoffred/mbig/git/dlib/dlibiboxcore', '-I/home/dgoffred/mbig/git/dlib/dlibmktcmdty', '-I/home/dgoffred/mbig/git/dlib/dlibmktfcd', '-I/home/dgoffred/mbig/git/dlib/thirdparty', '-I/home/dgoffred/mbig/git/dlib/dlibclient', '-I/home/dgoffred/mbig/git/dlib/dlibdates', '-I/home/dgoffred/mbig/git/dlib/dlibmkteq', '-I/home/dgoffred/mbig/git/dlib/dlibmktir', '-I/home/dgoffred/mbig/git/dlib/dlibotccalclient', '-I/home/dgoffred/mbig/git/dlib/dlibscn', '-I/home/dgoffred/mbig/git/dlib/m_dlibxl', '-I/home/dgoffred/mbig/git/dlib/xassetcalcapi', '-I/home/dgoffred/mbig/git/dlib/dlibdealapi', '-I/home/dgoffred/mbig/git/dlib/iboxtypes', '-I/home/dgoffred/mbig/git/dlib/m_otcdsp', '-I/home/dgoffred/mbig/git/dlib/dlibmktfx', '-I/home/dgoffred/mbig/git/dlib/dlibqfd', '-I/home/dgoffred/mbig/git/dlib/dlibbatchprice', '-I/home/dgoffred/mbig/git/dlib/dlibblpenv', '-I/home/dgoffred/mbig/git/dlib/dlibcoretypes', '-I/home/dgoffred/mbig/git/dlib/dlibhelper', '-I/home/dgoffred/mbig/git/dlib/m_otccaln', '-I/home/dgoffred/mbig/git/dlib/dlibevent', '-I/home/dgoffred/mbig/git/dlib/dlibblpenvstubs', '-I/home/dgoffred/mbig/git/dlib/m_exdl', '-I/home/dgoffred/mbig/git/dlib/m_exdlhandler', '-I/home/dgoffred/mbig/git/dlib/blan', '-I /bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.25/refroot/amd64//opt/bb/lib64/mlfi//mlfilib', '-I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.25/refroot/amd64/opt/bb/include', '-I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.25/refroot/amd64/opt/bb/lib64/mlfi', '-I/bb/build/Linux-x86_64-64/release/robolibs/big2015.25-722317-20150619121858/lib/dpkgroot/opt/bb/include', '-I.', '-I/usr/lib/gcc/x86_64-redhat-linux6E/4.4.6/include' ]
 
-traverse(translationUnit.cursor, TreePrinter())
+translationUnit = getTransUnit(inFilepath, ['-xc++', '-std=c++98'] + hackyHackyFlaggyFlaggy)
 
-''' This was a toy Observer to get my feet wet with picking out functions.
-
-class FunctionNamer(Observer):
-    def __init__(self):
-        super(FunctionNamer, self).__init__()
-
-    def observe(self, cursor):
-        if not isFunction(cursor):
-            return
-
-        printf('I have found a function named "{}" or "{}", if you like.', 
-               cursor.spelling, cursor.displayname)
-
-printf('\n')
-traverse(translationUnit.cursor, FunctionNamer())
-'''
+# traverse(translationUnit.cursor, TreePrinter())
 
 # Don't let it fool you -- it's just a list with some convenience methods:
 #     Stack.push(item)
@@ -180,9 +171,14 @@ def eponymousToken(cursor):
                for token in cursor.get_tokens() \
                if token.spelling == cursor.displayname]
 
-    length = len(matches)
-    assert length < 2
-    return matches[0] if length > 0 else None
+    # printf('Here are the tokens that matched: {}', 
+    #        [tk.spelling for tk in matches])
+
+    assert len(matches) > 0
+
+                       # Take the last rather than the first, 
+    return matches[-1] # in case the parameter shares its name with a type.
+    
 
 from collections import defaultdict
 
@@ -206,6 +202,7 @@ for filename, rewrites in rewrites.iteritems():
         printf('Skipping file {}', filename)
         continue
     with open(filename, 'r') as fin:
+        printf('Rewriting file {}', filename)
         with open(filename + '.rewrite', 'w') as fout:
             rewrite(fin, fout, rewrites)
 
