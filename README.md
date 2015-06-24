@@ -5,7 +5,7 @@ Clang-based rewriters (in python) for the more easily fixed issues diagnosed by 
 
  - Run on a linux machine where clang is present. That's most dev linux machines. 
  - The tricky part of using these scripts is supplying the appropriate compiler flags; namely all of the `-I`s and `-D`s clang needs to understand your code.
- - Any diagnostic of "severity" 3 or greater (error) is enough to mess up these scripts.
+ - Any diagnostic of severity 3 or greater (error) is enough to mess up these scripts.
  - The output of each script is the same as the input file, but with an additional suffix `.rewrite`.
 
 # Scripts
