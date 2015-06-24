@@ -184,6 +184,33 @@ def eponymousToken(cursor):
     assert length < 2
     return matches[0] if length > 0 else None
 
+from collections import defaultdict
+
+def rewritesByFile(unusedParameters):
+    rewrites = defaultdict(list)
+
+    for cursor in unusedParameters:
+        token = eponymousToken(cursor)
+        startOffset = token.extent.start.offset
+        endOffset = token.extent.end.offset
+        rewrite = (startOffset, endOffset - startOffset, '')
+        rewrites[token.location.file.name].append(rewrite)
+
+    return rewrites
+
+rewrites = rewritesByFile(finder.unusedParameters)
+
+from rewrite import rewrite
+for filename, rewrites in rewrites.iteritems():
+    if filename != inFilepath:
+        printf('Skipping file {}', filename)
+        continue
+    with open(filename, 'r') as fin:
+        with open(filename + '.rewrite', 'w') as fout:
+            rewrite(fin, fout, rewrites)
+
+''' Good for debugging
+
 printf('\nUnused parameters:\n')
 for cursor in finder.unusedParameters:
     printCursor(cursor)
@@ -196,7 +223,13 @@ for cursor in finder.unusedParameters:
            token.extent.end.line,
            token.extent.end.column,
            token.extent.end.offset)
+
+    startOffset = token.extent.start.offset
+    endOffset = token.extent.end.offset
+    rewrite = (startOffset, endOffset - startOffset, '') 
+    printf('    so the rewrite would be {}', rewrite)
     printf('')
+'''
 
 printErrors(translationUnit)
 

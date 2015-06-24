@@ -205,7 +205,8 @@ def misorderedInitMembers(fields, inits):
 
 def getRewrites(fields, inits):
     # A single rewrite has the form:
-    #    (filename, beginOffset, originalLength, replacementText)
+    #    (beginOffset, originalLength, replacementText)
+    # but here I prepend filename so we can group by it next.
     #
     rewrites = [(x.wrong.filename,
                  x.wrong.beginOffset, 
