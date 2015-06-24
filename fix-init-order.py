@@ -204,6 +204,9 @@ def misorderedInitMembers(fields, inits):
                 yield MisorderedInitMember(asInConstructor, asInDefinition)
 
 def getRewrites(fields, inits):
+    # A single rewrite has the form:
+    #    (filename, beginOffset, originalLength, replacementText)
+    #
     rewrites = [(x.wrong.filename,
                  x.wrong.beginOffset, 
                  len(x.wrong.text), 
