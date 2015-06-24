@@ -21,4 +21,4 @@ This is for `-Wunused-parameter`, when you give a name to a function parameter i
 #### Comments
 The whitepsace that previously surrounded any parameter name removed will remain; e.g. in
 `int foo(int x, int y) { ... }` → `int foo(int , int y) { ... }` if the parameter `x` is removed. 
-Note the space remaining before the comma. I haven't yet thought of a safe way to remove that.
+Note the space remaining after the first `int`. I haven't yet thought of a safe way to remove that.
