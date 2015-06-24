@@ -8,12 +8,6 @@ def getTransUnit(filepath, flags):
     transUnit = index.parse(filepath, flags)
     return transUnit
 
-# CursorKind.PARM_DECL
-# might be referred to in the topmost 
-# CursorKind.COMPOUND_STMT
-# by a
-# CursorKind.DECL_REF_EXPR
-
 class Function:
     def __init__(self, cursor):
         self.cursor = cursor
@@ -289,28 +283,6 @@ for filename, rewrites in rewrites.iteritems():
         printf('Rewriting file {}', filename)
         with open(filename + '.rewrite', 'w') as fout:
             rewrite(fin, fout, rewrites)
-
-''' Good for debugging
-
-printf('\nUnused parameters:\n')
-for cursor in finder.unusedParameters:
-    printCursor(cursor)
-    token = eponymousToken(cursor)
-    printf('    whose eponymous token is at {} {}.{}({})-{}.{}({})', 
-           token.location.file.name,
-           token.extent.start.line,
-           token.extent.start.column,
-           token.extent.start.offset,
-           token.extent.end.line,
-           token.extent.end.column,
-           token.extent.end.offset)
-
-    startOffset = token.extent.start.offset
-    endOffset = token.extent.end.offset
-    rewrite = (startOffset, endOffset - startOffset, '') 
-    printf('    so the rewrite would be {}', rewrite)
-    printf('')
-'''
 
 printErrors(translationUnit)
 
