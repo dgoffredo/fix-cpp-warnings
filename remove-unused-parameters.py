@@ -8,12 +8,6 @@ def getTransUnit(filepath, flags):
     transUnit = index.parse(filepath, flags)
     return transUnit
 
-# CursorKind.PARM_DECL
-# might be referred to in the topmost 
-# CursorKind.COMPOUND_STMT
-# by a
-# CursorKind.DECL_REF_EXPR
-
 class Function:
     def __init__(self, cursor):
         self.cursor = cursor
