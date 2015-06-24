@@ -19,6 +19,6 @@ Make sure that you provide the proper `-I` and `-D` flags so that clang compiles
 #### Purpose
 This is for `-Wunused-parameter`, when you give a name to a function parameter in the function's definition, but then don't use the variable in the function. This script will remove the _name_ (not the type) of the parameter in the function definition.
 #### Comments
-The whitepsace the previously surrounded any parameter name removed will remain; e.g. 
+The whitepsace that previously surrounded any parameter name removed will remain; e.g. in
 `int foo(int x, int y) { ... }` → `int foo(int , int y) { ... }` if the parameter `x` is removed. 
 Note the space remaining before the comma. I haven't yet thought of a safe way to remove that.
