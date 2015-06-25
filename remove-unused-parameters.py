@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from clangwrapper import Index, CursorKind, Cursor, HashableCursor
+from clangwrapper import Index, CursorKind, Cursor, Diagnostic, HashableCursor
 from observer import traverse, Observer, ObserverGroup, TreePrinter, printCursor
 
 def getTransUnit(filepath, flags):
@@ -40,19 +40,26 @@ def isFunction(cursor):
                            CursorKind.FUNCTION_DECL]
 
 def printErrors(transUnit):
+    didFindError = False
     for diag in transUnit.diagnostics:
+        if diag.severity >= Diagnostic.Error:
+            didFindError = True
         printf('**** {}', diag)
         for fix in diag.fixits:
             printf(' ****     possible fix --> {}', fix)
 
-
-from fileprinter import printf
+    return didFindError
 
 import sys
+from fileprinter import printf
+
 inFilepath = sys.argv[1]
 
 hackyHackyFlaggyFlaggy = [
-'-D_LINUX_SOURCE', # for bb_inttypes.h
+'-DBB64BIT',
+'-DBAS_NOBBENV', 
+'-D_LINUX_SOURCE',
+'-I/usr/lib/gcc/x86_64-redhat-linux6E/4.4.7/include',
 '-I.',
 '-I../../../../../src/bde/bdet',
 '-I../bde/bbedc',
@@ -67,11 +74,11 @@ hackyHackyFlaggyFlaggy = [
 '-I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.25/refroot/amd64/opt/bb/include',
 '-I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.25/refroot/amd64/opt/bb/lib64/mlfi',
 '-I/bb/bigstorq3/qfdlibci/qfd/qfd_external.git/libs/boost/dist/1.56.0/include',
-'-I/bb/build/Linux-x86_64-64/release/robolibs/big2015.25-722660-20150622111814/lib/dpkgroot/opt/bb/include',
-'-I/bb/build/Linux-x86_64-64/release/robolibs/big2015.25-722660-20150622111814/lib/dpkgroot/opt/bb/include/stlport',
-'-I/bb/build/Linux-x86_64-64/release/robolibs/big2015.25-722660-20150622111814/share/include/00depbuild',
-'-I/bb/build/Linux-x86_64-64/release/robolibs/big2015.25-722660-20150622111814/share/include/00deployed',
-'-I/bb/build/Linux-x86_64-64/release/robolibs/big2015.25-722660-20150622111814/share/include/00offlonly',
+'-I/bb/build/Linux-x86_64-64/release/robolibs/source/lib/dpkgroot/opt/bb/include',
+'-I/bb/build/Linux-x86_64-64/release/robolibs/source/lib/dpkgroot/opt/bb/include/stlport',
+'-I/bb/build/Linux-x86_64-64/release/robolibs/source/share/include/00depbuild',
+'-I/bb/build/Linux-x86_64-64/release/robolibs/source/share/include/00deployed',
+'-I/bb/build/Linux-x86_64-64/release/robolibs/source/share/include/00offlonly',
 '-I/bb/build/share/stp/include/00offlonly',
 '-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src',
 '-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs',
@@ -132,10 +139,13 @@ hackyHackyFlaggyFlaggy = [
 '-I/home/dgoffred/mbig/git/dlib/m_otccaln',
 '-I/home/dgoffred/mbig/git/dlib/m_otcdsp',
 '-I/home/dgoffred/mbig/git/dlib/thirdparty',
-'-I/home/dgoffred/mbig/git/dlib/thirdparty/otcxsvcmsg',
-'-I/usr/lib/gcc/x86_64-redhat-linux6E/4.4.6/include']
+'-I/home/dgoffred/mbig/git/dlib/thirdparty/otcxsvcmsg']
 
 translationUnit = getTransUnit(inFilepath, ['-xc++', '-std=c++98'] + hackyHackyFlaggyFlaggy)
+
+didFindError = printErrors(translationUnit)
+if didFindError:
+    sys.exit('FATAL One or more errors found in compilation unit.')
 
 # Comment out if it's too loud (it gets really loud)
 #
@@ -249,11 +259,13 @@ def eponymousToken(cursor):
                for token in cursor.get_tokens() \
                if token.spelling == cursor.displayname]
 
-    # printf('Here are the tokens that matched: {}', 
-    #        [tk.spelling for tk in matches])
-
-    assert len(matches) > 0
-
+    # "assert" might be too harsh.
+    # assert len(matches) > 0
+    if len(matches) == 0:
+        printf('ERROR The following cursor does not have an eponymous token:')
+        printf(cursor.location.file.name)
+        printCursor(cursor)
+        return None
                        # Take the last rather than the first, 
     return matches[-1] # in case the parameter shares its name with a type.
     
@@ -265,6 +277,8 @@ def rewritesByFile(unusedParameters):
 
     for cursor in unusedParameters:
         token = eponymousToken(cursor)
+        if not token:
+            continue
         startOffset = token.extent.start.offset
         endOffset = token.extent.end.offset
         rewrite = (startOffset, endOffset - startOffset, '')
@@ -283,6 +297,4 @@ for filename, rewrites in rewrites.iteritems():
         printf('Rewriting file {}', filename)
         with open(filename + '.rewrite', 'w') as fout:
             rewrite(fin, fout, rewrites)
-
-printErrors(translationUnit)
 
