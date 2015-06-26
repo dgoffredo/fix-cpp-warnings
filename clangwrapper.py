@@ -36,3 +36,34 @@ class HashableCursor(object):
     def __ne__(self, other):
         return not self == other
 
+# TODO Would plain delegation ("inheritance") work for here and HashableCursor,
+#      or is the explicit forwarding of behavior necessary?
+#
+class HashableLocation(object):
+    def __init__(self, location):
+        self.location = location
+
+    def __getattr__(self, attr):
+        return getattr(self.location, attr)
+
+    def __repr__(self):
+        return repr(self.location)
+
+    def __str__(self):
+        return str(self.location)
+
+    def __hash__(self):
+        loc = self.location
+        # Key is filename, offset.
+        # Sometimes there is no file, so I account for that.
+        key = (None if loc.file is None else loc.file.name, loc.offset)
+        return hash(key)
+
+    def __eq__(self, other):
+        if type(other) is SourceLocation:
+            return other == self.location
+        else:
+            return other.location == self.location
+
+    def __ne__(self, other):
+        return not self == other

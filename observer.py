@@ -49,11 +49,11 @@ class ObserverGroup(Observer):
 import sys
 import fileprinter
 
-def _repeatedString(s, n):
+def repeatedString(s, n):
     return ''.join(s for _ in range(n))
 
 def printCursor(c, printer=fileprinter.printf, indentLevel=0, tabWidth=4, tokenLineLimit=70):
-    indent = _repeatedString(' ', indentLevel)
+    indent = repeatedString(' ', indentLevel * tabWidth)
     tokensRep = ' '.join('"{}"'.format(token.spelling) \
                          for token in c.get_tokens())
     semantic_parent = c.semantic_parent

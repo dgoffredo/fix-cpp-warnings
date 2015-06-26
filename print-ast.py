@@ -43,13 +43,18 @@ if __name__ == '__main__':
 
     filepath = args.file
     flags = getFlagsFromArgs(args)
-    transUnit = getTransUnit(filepath, ['-xc++', '-std=c++98'] + flags)
+    hardcodedFlags = ['-xc++', '-std=c++98', '-Wall']
+    transUnit = getTransUnit(filepath, hardcodedFlags + flags)
     c = transUnit.cursor
 
     printer = TreePrinter()
     traverse(c, printer)
 
     for diag in transUnit.diagnostics:
-        printerr('\n**** {}', diag)
+        printerr('\n**** {} <{} ({}) [{}]>', 
+                 diag, 
+                 diag.category_name, 
+                 diag.category_number,
+                 diag.option)
         for fix in diag.fixits:
             printerr(' ****     possible fix --> {}', fix)
