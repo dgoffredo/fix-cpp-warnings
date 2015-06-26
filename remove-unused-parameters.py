@@ -58,6 +58,7 @@ inFilepath = sys.argv[1]
 hackyHackyFlaggyFlaggy = [
 '-DBB64BIT',
 '-DBAS_NOBBENV', 
+'-DBSL_OVERRIDES_STD', # Warning, warning!
 '-D_LINUX_SOURCE',
 '-I/usr/lib/gcc/x86_64-redhat-linux6E/4.4.7/include',
 '-I.',
