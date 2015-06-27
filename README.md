@@ -23,3 +23,9 @@ This is for `-Wunused-parameter`, when you give a name to a function parameter i
 The whitepsace that previously surrounded any parameter name removed will remain; e.g. in
 `int foo(int x, int y) { ... }` → `int foo(int , int y) { ... }` if the parameter `x` is removed. 
 Note the space remaining after the first `int`. I haven't yet thought of a safe way to remove that.
+
+## add-trivial-switch-defaults.py
+#### Purpose
+This is for `-Wswitch`, when you have a `switch` on an `enum` type, and do not handle each of the possible `case`s, and don't have a `default` case. This script will add a `default: break;` to the end of the switch.
+#### Comments
+Adding a quiet `default` will make explicit what these warning-producing switches were doing implicitly already, but that does not mean it is the best solution. Review any modifications made by this script and see whether a `default` case is appropriate for your switches.
