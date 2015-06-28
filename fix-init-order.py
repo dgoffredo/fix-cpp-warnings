@@ -221,6 +221,7 @@ if __name__ == '__main__':
 
     util = fixer.Fixer('Rewrite misordered items in member initializer lists.')
     args, transUnit = util.setup()
+    filepath = util.filepath
     
     import fileprinter
     printf = fileprinter.printf if args.verbose else doNothing
