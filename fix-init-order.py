@@ -1,14 +1,9 @@
 #!/usr/bin/python
 
-from clangwrapper import Index, CursorKind, Cursor, HashableCursor
-from observer import traverse, Observer, ObserverGroup, TreePrinter
-
-def getTransUnit(filepath, flags):
-    index = Index.create()
-    transUnit = index.parse(filepath, flags)
-    return transUnit
-
+from clangwrapper import CursorKind, Cursor, HashableCursor
+from observer import traverse, Observer, ObserverGroup
 from collections import defaultdict
+import fixer
 
 def isRecordDef(kind):
     return kind in (CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION,
@@ -219,83 +214,35 @@ def getRewrites(fields, inits):
 
     return rewritesByFile
 
-
-import argparse
-def parseArgs():
-    parser = argparse.ArgumentParser(description='Rewrite misordered items in member initializer lists.')
-    parser.add_argument('file', type=str,
-                        help='The source file to analyze and rewrite.')
-    parser.add_argument('flags', type=str, nargs='*',
-                        help='A compiler flag to pass through the clang.')
-    parser.add_argument('--flags-file', dest='flagsFile', action='store',
-                        help='Path to a file containing clang compiler flags separated by newlines.')
-    parser.add_argument('--log-file', '-l', dest='logFile', action='store',
-                        help='Path to a file where verbose logging will be written.')
-    parser.add_argument('--verbose', '-v', action='count',
-                        help='Log to stdout verbosely.')
-    return parser.parse_args()
-
-def getFlagsFromFile(name):
-    with open(name, 'r') as file:
-        return [ line.strip() for line in file.readlines()]
-
-def getFlagsFromArgs(args):
-    if args.flagsFile:
-        return getFlagsFromFile(args.flagsFile) + args.flags
-    else:
-        return args.flags
-
 def doNothing(*args, **kwargs):
     pass
 
 if __name__ == '__main__':
-    args = parseArgs()
 
-    import subprocess
-    import sys
+    util = fixer.Fixer('Rewrite misordered items in member initializer lists.')
+    args, transUnit = util.setup()
+    
     import fileprinter
-
-    if args.logFile and args.verbose:
-        tee = subprocess.Popen(['tee', args.logFile], stdin=subprocess.PIPE)
-        printf = fileprinter.FilePrinter(tee.stdin)
-    elif args.logFile:
-        printf = fileprinter.FilePrinter(open(args.logFile, 'w'))
-    elif args.verbose:
-        printf = fileprinter.printf # stdout
-    else:
-        printf = doNothing
-
-    printerr = fileprinter.FilePrinter(sys.stderr)
-
-    filepath = args.file
-    flags = getFlagsFromArgs(args)
-    transUnit = getTransUnit(filepath, ['-xc++', '-std=c++98'] + flags)
-    c = transUnit.cursor
-
-    printer = TreePrinter()
+    printf = fileprinter.printf if args.verbose else doNothing
+    printerr = fileprinter.printerr
+   
     fields = FieldFinder()
     inits = InitFinder()
-    observers = ObserverGroup([fields, inits, printer])
+    observers = ObserverGroup([fields, inits])
 
-    traverse(c, observers)
+    traverse(transUnit.cursor, observers)
     inits.fillInitFieldsText()
 
     if args.verbose:
-        printf('')
-        printf('\nThe fields:')
+        printf('\n\nThe fields:')
         fields.prettyPrint()
-        printf('\nThe constructors:')
+        printf('\n\nThe constructors:')
         inits.prettyPrint()
         printf('')
 
     rewritesPerFile = getRewrites(fields, inits)
     printf('\nThe rewrites:')
     printf(rewritesPerFile)
-
-    for diag in transUnit.diagnostics:
-        printerr('**** {}', diag)
-        for fix in diag.fixits:
-            printerr(' ****     possible fix --> {}', fix)
 
     printf("Now let's try to do the rewrites")
     from rewrite import rewrite

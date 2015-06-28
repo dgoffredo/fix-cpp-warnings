@@ -1,35 +1,8 @@
 #!/usr/bin/python
 
-from clangwrapper import Index, HashableLocation, CursorKind
-from observer import traverse, Observer, TreePrinter, printCursor, repeatedString
-
-def getTransUnit(filepath, flags):
-    index = Index.create()
-    transUnit = index.parse(filepath, flags)
-    return transUnit
-
-from pprint import pprint
-
-import argparse
-def parseArgs():
-    parser = argparse.ArgumentParser(description='Rewrite misordered items in member initializer lists.')
-    parser.add_argument('--flags-file', dest='flagsFile', action='store',
-                        help='Path to a file containing clang compiler flags separated by newlines.')
-    parser.add_argument('file', type=str,
-                        help='The source file to analyze and rewrite.')
-    parser.add_argument('flags', type=str, nargs='*',
-                        help='A compiler flag to pass through the clang.')
-    return parser.parse_args()
-
-def getFlagsFromFile(name):
-    with open(name, 'r') as file:
-        return [ line.strip() for line in file.readlines()]
-
-def getFlagsFromArgs(args):
-    if args.flagsFile:
-        return getFlagsFromFile(args.flagsFile) + args.flags
-    else:
-        return args.flags
+from clangwrapper import HashableLocation, CursorKind
+from observer import traverse, Observer, printCursor, repeatedString
+import fixer
 
 # Will find the parent of the //first// (uppermost) cursor for each location 
 # passed into its constructor.
@@ -50,11 +23,7 @@ class FindCursorParent(Observer):
 
         # If looking for it and haven't found it
         if loc in self.locations and loc not in self.cursors:
-            printf('Found one:')
-            printCursor(cursor)
             parent = self.parentStack[-1]
-            printf("Here's the parent:")
-            printCursor(parent)
             self.cursors[loc] = parent
 
     def pushFrom(self, cursor):
@@ -63,6 +32,8 @@ class FindCursorParent(Observer):
     def popTo(self, cursor):
         self.parentStack.pop()
 
+def firstWith(sequence, predicate, default=None):
+    return next((x for x in sequence if predicate(x)), default)
 
 def getSwitchRewrite(switchCursor, printerr):
     if switchCursor.kind != CursorKind.SWITCH_STMT:
@@ -91,56 +62,43 @@ def getSwitchRewrite(switchCursor, printerr):
         printerr("The body of this switch doesn't have any children. What the hell.")
         return None
 
-    last = children[-1]
-    indentation = repeatedString(' ', last.location.column - 1)
-    offset = last.extent.end.offset + 1
+    lastChild = children[-1]
+    offset = list(lastChild.get_tokens())[-1].extent.end.offset
+
+    def isCase(cursor):
+        return cursor.kind == CursorKind.CASE_STMT
+        
+    cursorToBeBelow = firstWith(reversed(children), isCase) or lastChild
+    indentation = repeatedString(' ', cursorToBeBelow.location.column - 1)
 
     # A rewrite is (offset to beginning, length of old text, new text)
-    return (offset, 0, '\n{}default: break; /* TODO? */'.format(indentation)) 
+    # Note: I don't append a newline since I assume that the last token 
+    #       of the last child was probably followed by a newline.
+    tabWidth = 4
+    return (offset, 0, '\n{0}default:\n{0}{1}break;{2}'.format(
+                           indentation, 
+                           repeatedString(' ', tabWidth),
+                           '' if args.noTodo else ' /* TODO? */'))
 
 if __name__ == '__main__':
-    args = parseArgs()
-
-    import subprocess
-    import sys
     import fileprinter
+    printf = fileprinter.printf
+    printerr = fileprinter.printerr
 
-    printf = fileprinter.printf # stdout
-    printerr = fileprinter.FilePrinter(sys.stderr)
+    util = fixer.Fixer("Add no-op 'default:' to incomplete switches on enum types.")
+    util.add_argument('--no-todo', dest='noTodo', action='count',
+                      help="Don't add a TODO comment to each inserted 'default:'")
+    args, transUnit = util.setup()
+    filepath = util.filepath
 
-    filepath = args.file
-    flags = getFlagsFromArgs(args)
-    hardcodedFlags = ['-xc++', '-std=c++98', '-Wall']
-    transUnit = getTransUnit(filepath, hardcodedFlags + flags)
-    c = transUnit.cursor
-
-    switchWarnLocations = set()
-    hack = None
-
-    for diag in transUnit.diagnostics:
-        printerr('\n**** {} <{} ({}) [{}]>', 
-                 diag, 
-                 diag.category_name, 
-                 diag.category_number,
-                 diag.option)
-        for fix in diag.fixits:
-            printerr(' ****     possible fix --> {}', fix)
-
-        if diag.option == '-Wswitch':
-            switchWarnLocations.add(HashableLocation(diag.location))
-
-    printer = TreePrinter()
-    traverse(c, printer)
-    printf('\n\n')
-
-    from pprint import pprint
-    pprint(switchWarnLocations)
+    switchWarnLocations = set(HashableLocation(diag.location) \
+                              for diag in transUnit.diagnostics \
+                              if diag.option == '-Wswitch')
 
     finder = FindCursorParent(switchWarnLocations)
-    traverse(c, finder)
+    traverse(transUnit.cursor, finder)
 
     rewrites = [getSwitchRewrite(cursor, printerr) for cursor in finder.cursors.itervalues()]
-    pprint(rewrites)
 
     fin = open(filepath, 'r')
     fout = open(filepath + '.rewrite', 'w')

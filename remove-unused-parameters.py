@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-from clangwrapper import Index, CursorKind, Cursor, Diagnostic, HashableCursor
-from observer import traverse, Observer, ObserverGroup, TreePrinter, printCursor
+from clangwrapper import CursorKind, Cursor, Diagnostic, HashableCursor
+from observer import traverse, Observer, ObserverGroup, printCursor
 
 def getTransUnit(filepath, flags):
     index = Index.create()
@@ -44,113 +44,11 @@ def printErrors(transUnit):
     for diag in transUnit.diagnostics:
         if diag.severity >= Diagnostic.Error:
             didFindError = True
-        printf('**** {}', diag)
+        printerr('**** {}', diag)
         for fix in diag.fixits:
-            printf(' ****     possible fix --> {}', fix)
+            printerr(' ****     possible fix --> {}', fix)
 
     return didFindError
-
-import sys
-from fileprinter import printf
-
-inFilepath = sys.argv[1]
-
-hackyHackyFlaggyFlaggy = [
-'-DBB64BIT',
-'-DBAS_NOBBENV', 
-'-DBSL_OVERRIDES_STD', # Warning, warning!
-'-D_LINUX_SOURCE',
-'-I/usr/lib/gcc/x86_64-redhat-linux6E/4.4.7/include',
-'-I.',
-'-I../../../../../src/bde/bdet',
-'-I../bde/bbedc',
-'-I../bde/bdet',
-'-I../bde/bdetu',
-'-I../bde/bdxt',
-'-I../bdet',
-'-I../contract',
-'-I../core',
-'-I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.25/refroot/amd64//opt/bb/include',
-'-I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.25/refroot/amd64//opt/bb/lib64/mlfi//mlfilib',
-'-I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.25/refroot/amd64/opt/bb/include',
-'-I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.25/refroot/amd64/opt/bb/lib64/mlfi',
-'-I/bb/bigstorq3/qfdlibci/qfd/qfd_external.git/libs/boost/dist/1.56.0/include',
-'-I/bb/build/Linux-x86_64-64/release/robolibs/source/lib/dpkgroot/opt/bb/include',
-'-I/bb/build/Linux-x86_64-64/release/robolibs/source/lib/dpkgroot/opt/bb/include/stlport',
-'-I/bb/build/Linux-x86_64-64/release/robolibs/source/share/include/00depbuild',
-'-I/bb/build/Linux-x86_64-64/release/robolibs/source/share/include/00deployed',
-'-I/bb/build/Linux-x86_64-64/release/robolibs/source/share/include/00offlonly',
-'-I/bb/build/share/stp/include/00offlonly',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_breg/qfd_breg_wrapper',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_core/robo/quantcore',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_equity/Equity',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_equity/Equity/common',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_equity/Equity/local_vol',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_equity/Equity/qrdqnt',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_equity/robo/quantcore',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_equity_hybrid_transitional',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_fx/robo/quantcore',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_hybrid/cpp/gen2',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_hybrid/cpp/lmm',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_hybrid_converters',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_infrastructure/robo/quantcore',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_market/robo/quantcore',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_mathutil',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_mathutil/robo/quantcore',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_mathutil/robo/quantquad',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_poly_var',
-'-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/plugins',
-'-I/home/dgoffred/mbig/git/dlib/blan/src/bde/bdet',
-'-I/home/dgoffred/mbig/git/dlib/dlibbatchprice',
-'-I/home/dgoffred/mbig/git/dlib/dlibbbcache',
-'-I/home/dgoffred/mbig/git/dlib/dlibblpenv',
-'-I/home/dgoffred/mbig/git/dlib/dlibblpenvstubs',
-'-I/home/dgoffred/mbig/git/dlib/dlibclient',
-'-I/home/dgoffred/mbig/git/dlib/dlibcoredbacc',
-'-I/home/dgoffred/mbig/git/dlib/dlibcoretypes',
-'-I/home/dgoffred/mbig/git/dlib/dlibdates',
-'-I/home/dgoffred/mbig/git/dlib/dlibdbacc',
-'-I/home/dgoffred/mbig/git/dlib/dlibdealapi',
-'-I/home/dgoffred/mbig/git/dlib/dlibdealtypes',
-'-I/home/dgoffred/mbig/git/dlib/dlibevent',
-'-I/home/dgoffred/mbig/git/dlib/dlibexternal',
-'-I/home/dgoffred/mbig/git/dlib/dlibhelper',
-'-I/home/dgoffred/mbig/git/dlib/dlibiboxclient',
-'-I/home/dgoffred/mbig/git/dlib/dlibiboxcore',
-'-I/home/dgoffred/mbig/git/dlib/dliblisted',
-'-I/home/dgoffred/mbig/git/dlib/dlibmktcmdty',
-'-I/home/dgoffred/mbig/git/dlib/dlibmkteq',
-'-I/home/dgoffred/mbig/git/dlib/dlibmkteqcore',
-'-I/home/dgoffred/mbig/git/dlib/dlibmktfcd',
-'-I/home/dgoffred/mbig/git/dlib/dlibmktfx',
-'-I/home/dgoffred/mbig/git/dlib/dlibmktir',
-'-I/home/dgoffred/mbig/git/dlib/dlibotccalclient',
-'-I/home/dgoffred/mbig/git/dlib/dlibpdfgen',
-'-I/home/dgoffred/mbig/git/dlib/dlibqfd',
-'-I/home/dgoffred/mbig/git/dlib/dlibscn',
-'-I/home/dgoffred/mbig/git/dlib/dlibui',
-'-I/home/dgoffred/mbig/git/dlib/dlibuitypes',
-'-I/home/dgoffred/mbig/git/dlib/iboxtypes',
-'-I/home/dgoffred/mbig/git/dlib/m_dlibxl',
-'-I/home/dgoffred/mbig/git/dlib/m_exdl',
-'-I/home/dgoffred/mbig/git/dlib/m_exdlhandler',
-'-I/home/dgoffred/mbig/git/dlib/m_ibox',
-'-I/home/dgoffred/mbig/git/dlib/m_otccaln',
-'-I/home/dgoffred/mbig/git/dlib/m_otcdsp',
-'-I/home/dgoffred/mbig/git/dlib/thirdparty',
-'-I/home/dgoffred/mbig/git/dlib/thirdparty/otcxsvcmsg']
-
-translationUnit = getTransUnit(inFilepath, ['-xc++', '-std=c++98'] + hackyHackyFlaggyFlaggy)
-
-didFindError = printErrors(translationUnit)
-if didFindError:
-    sys.exit('FATAL One or more errors found in compilation unit.')
-
-# Comment out if it's too loud (it gets really loud)
-#
-# traverse(translationUnit.cursor, TreePrinter())
 
 # Don't let it fool you -- it's just a list with some convenience methods:
 #     Stack.push(item)
@@ -251,10 +149,6 @@ class FunctionObserver:
         elif kind == CursorKind.DECL_REF_EXPR:
             self._observeRef(childCursor)
 
-finder = FindUnusedParameters()
-printf('')
-traverse(translationUnit.cursor, finder)
-
 def eponymousToken(cursor):
     matches = [token \
                for token in cursor.get_tokens() \
@@ -263,39 +157,50 @@ def eponymousToken(cursor):
     # "assert" might be too harsh.
     # assert len(matches) > 0
     if len(matches) == 0:
-        printf('ERROR The following cursor does not have an eponymous token:')
-        printf(cursor.location.file.name)
-        printCursor(cursor)
+        printerr('ERROR The following cursor does not have an eponymous token:')
+        printerr(cursor.location.file.name)
+        printCursor(cursor, printerr)
         return None
                        # Take the last rather than the first, 
     return matches[-1] # in case the parameter shares its name with a type.
-    
 
-from collections import defaultdict
 
-def rewritesByFile(unusedParameters):
-    rewrites = defaultdict(list)
+if __name__ == '__main__':
+    from fileprinter import printf, printerr
 
-    for cursor in unusedParameters:
-        token = eponymousToken(cursor)
-        if not token:
+    import fixer
+    util = fixer.Fixer('Remove unused parameter variables from function definitions.')
+    args, translationUnit = util.setup()
+    inFilepath = util.filepath
+
+    finder = FindUnusedParameters()
+    traverse(translationUnit.cursor, finder)   
+
+    from collections import defaultdict
+
+    def rewritesByFile(unusedParameters):
+        rewrites = defaultdict(list)
+
+        for cursor in unusedParameters:
+            token = eponymousToken(cursor)
+            if not token:
+                continue
+            startOffset = token.extent.start.offset
+            endOffset = token.extent.end.offset
+            rewrite = (startOffset, endOffset - startOffset, '')
+            rewrites[token.location.file.name].append(rewrite)
+
+        return rewrites
+
+    rewrites = rewritesByFile(finder.unusedParameters)
+
+    from rewrite import rewrite
+    for filename, rewrites in rewrites.iteritems():
+        if filename != inFilepath:
+            printf('Skipping file {}', filename)
             continue
-        startOffset = token.extent.start.offset
-        endOffset = token.extent.end.offset
-        rewrite = (startOffset, endOffset - startOffset, '')
-        rewrites[token.location.file.name].append(rewrite)
-
-    return rewrites
-
-rewrites = rewritesByFile(finder.unusedParameters)
-
-from rewrite import rewrite
-for filename, rewrites in rewrites.iteritems():
-    if filename != inFilepath:
-        printf('Skipping file {}', filename)
-        continue
-    with open(filename, 'r') as fin:
-        printf('Rewriting file {}', filename)
-        with open(filename + '.rewrite', 'w') as fout:
-            rewrite(fin, fout, rewrites)
+        with open(filename, 'r') as fin:
+            printf('Rewriting file {}', filename)
+            with open(filename + '.rewrite', 'w') as fout:
+                rewrite(fin, fout, rewrites)
 

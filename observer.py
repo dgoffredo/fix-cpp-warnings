@@ -74,7 +74,10 @@ def printCursor(c, printer=fileprinter.printf, indentLevel=0, tabWidth=4, tokenL
                 c.extent.end.offset)
 
     if len(tokensRep) > tokenLineLimit:
-        tokensRep = tokensRep[0:tokenLineLimit - 3] + '...'
+        # tokensRep = tokensRep[:tokenLineLimit - 3] + '...'
+        etc = ' ... '
+        excerptSize = (tokenLineLimit - len(etc)) // 2
+        tokensRep = tokensRep[:excerptSize] + etc + tokensRep[-excerptSize:]
     printer('{}{}', indent, tokensRep)
 
 

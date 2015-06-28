@@ -26,4 +26,5 @@ def FilePrinter(file):
 #
 import sys
 printf = FilePrinter(sys.stdout)
+printerr = FilePrinter(sys.stderr)
 
