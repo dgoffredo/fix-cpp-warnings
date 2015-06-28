@@ -37,7 +37,8 @@ class Function:
 def isFunction(cursor):
     return cursor.kind in [CursorKind.CXX_METHOD, 
                            CursorKind.FUNCTION_TEMPLATE,
-                           CursorKind.FUNCTION_DECL]
+                           CursorKind.FUNCTION_DECL,
+                           CursorKind.CONSTRUCTOR]
 
 def printErrors(transUnit):
     didFindError = False
@@ -87,7 +88,16 @@ class FindUnusedParameters(Observer):
             currentFunction.observeChild(cursor)
 
     def pushFrom(self, cursor):
-        pass # Nothing to do
+        # Just some sanity checking. If we are pushing from a function,
+        # then it must be the case that we just put a new FunctionObserever
+        # on the top of the stack, and its cursor should be this one.
+        #
+        if not isFunction(cursor):
+            return
+
+        currentFunc = self._functionObservers.top()
+        assert currentFunc
+        assert cursor == currentFunc.cursor
 
     def popTo(self, cursor):
         funcs = self._functionObservers
@@ -113,7 +123,7 @@ class FunctionObserver:
     def __init__(self, cursor):
         self.cursor = cursor
         self.function = Function(cursor)
-        self._foundFirstBlock = False
+        self.hasBody = False
 
     def __repr__(self):
         return self.function.cursor.displayname
@@ -132,7 +142,6 @@ class FunctionObserver:
 
     def _observeFirstBlock(self):
         # printf('{} is observing the first block', self)
-        self._foundFirstBlock = True
         self.function.hasBody = True
 
     def _observeRef(self, refCursor):
@@ -141,11 +150,10 @@ class FunctionObserver:
 
     def observeChild(self, childCursor):
         kind = childCursor.kind
-        if not self._foundFirstBlock:
-            if kind == CursorKind.PARM_DECL:
-                self._observeParam(childCursor)
-            elif kind == CursorKind.COMPOUND_STMT:
-                self._observeFirstBlock()
+        if kind == CursorKind.PARM_DECL:
+            self._observeParam(childCursor)
+        elif kind == CursorKind.COMPOUND_STMT:
+            self._observeFirstBlock()
         elif kind == CursorKind.DECL_REF_EXPR:
             self._observeRef(childCursor)
 
