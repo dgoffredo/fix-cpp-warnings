@@ -140,7 +140,7 @@ class FunctionObserver:
         # printf('{} is observing parameter {}', self, paramCursor.displayname)
         self.function.addParam(paramCursor)
 
-    def _observeFirstBlock(self):
+    def _observeBlock(self):
         # printf('{} is observing the first block', self)
         self.function.hasBody = True
 
@@ -153,7 +153,7 @@ class FunctionObserver:
         if kind == CursorKind.PARM_DECL:
             self._observeParam(childCursor)
         elif kind == CursorKind.COMPOUND_STMT:
-            self._observeFirstBlock()
+            self._observeBlock()
         elif kind == CursorKind.DECL_REF_EXPR:
             self._observeRef(childCursor)
 
