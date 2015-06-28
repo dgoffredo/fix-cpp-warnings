@@ -158,7 +158,7 @@ class FunctionObserver:
             self._observeRef(childCursor)
 
 def eponymousToken(cursor):
-    if cursor.displayname == '':
+    if not cursor.displayname:
         return None # Of course nothing will match
 
     matches = [token \
