@@ -2,12 +2,12 @@
 #
 -DBB64BIT
 -DBAS_NOBBENV 
+-D_LINUX_SOURCE
 
 # BSL_OVERRIDES_STD isn't necessary for linux builds,
 # but I keep it here anyway since since there are warnings
 # in library code that only our non-linux offlines call.
 -DBSL_OVERRIDES_STD
--D_LINUX_SOURCE
 
 # Include directories
 #
@@ -15,49 +15,17 @@
 # version of clang available on our dev machines, this might not be
 # necessary anymore.
 -I/usr/lib/gcc/x86_64-redhat-linux6E/4.4.7/include
+-I/usr/lib/gcc/x86_64-redhat-linux6E/4.4.6/include
 
 -I.
--I../../../../../src/bde/bdet
--I../bde/bbedc
--I../bde/bdet
--I../bde/bdetu
--I../bde/bdxt
--I../bdet
--I../contract
--I../core
--I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.25/refroot/amd64//opt/bb/include
--I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.25/refroot/amd64//opt/bb/lib64/mlfi//mlfilib
--I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.25/refroot/amd64/opt/bb/include
--I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.25/refroot/amd64/opt/bb/lib64/mlfi
--I/bb/bigstorq3/qfdlibci/qfd/qfd_external.git/libs/boost/dist/1.56.0/include
--I/bb/build/Linux-x86_64-64/release/robolibs/source/lib/dpkgroot/opt/bb/include
--I/bb/build/Linux-x86_64-64/release/robolibs/source/lib/dpkgroot/opt/bb/include/stlport
--I/bb/build/Linux-x86_64-64/release/robolibs/source/share/include/00depbuild
--I/bb/build/Linux-x86_64-64/release/robolibs/source/share/include/00deployed
--I/bb/build/Linux-x86_64-64/release/robolibs/source/share/include/00offlonly
--I/bb/build/share/stp/include/00offlonly
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_breg/qfd_breg_wrapper
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_core/robo/quantcore
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_equity/Equity
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_equity/Equity/common
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_equity/Equity/local_vol
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_equity/Equity/qrdqnt
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_equity/robo/quantcore
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_equity_hybrid_transitional
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_fx/robo/quantcore
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_hybrid/cpp/gen2
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_hybrid/cpp/lmm
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_hybrid_converters
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_infrastructure/robo/quantcore
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_market/robo/quantcore
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_mathutil
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_mathutil/robo/quantcore
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_mathutil/robo/quantquad
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/libs/qfd_poly_var
--I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.34.3/src/plugins
+-I/home/dgoffred/mbig/git/dlib/xassetcalcapi
+-I/home/dgoffred/mbig/git/dlib/blan/src/bde/bbedc
 -I/home/dgoffred/mbig/git/dlib/blan/src/bde/bdet
+-I/home/dgoffred/mbig/git/dlib/blan/src/bde/bdetu
+-I/home/dgoffred/mbig/git/dlib/blan/src/bde/bdxt
+-I/home/dgoffred/mbig/git/dlib/blan/src/bde/bdet
+-I/home/dgoffred/mbig/git/dlib/blan/src/contract
+-I/home/dgoffred/mbig/git/dlib/blan/src/core
 -I/home/dgoffred/mbig/git/dlib/dlibbatchprice
 -I/home/dgoffred/mbig/git/dlib/dlibbbcache
 -I/home/dgoffred/mbig/git/dlib/dlibblpenv
@@ -96,3 +64,35 @@
 -I/home/dgoffred/mbig/git/dlib/m_otcdsp
 -I/home/dgoffred/mbig/git/dlib/thirdparty
 -I/home/dgoffred/mbig/git/dlib/thirdparty/otcxsvcmsg
+-I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.26/refroot/amd64//opt/bb/include
+-I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.26/refroot/amd64//opt/bb/lib64/mlfi//mlfilib
+-I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.26/refroot/amd64/opt/bb/include
+-I/bb/bigstorq3/derv_xasset/thirdparty/dlib_dpkg_distribution_2015.26/refroot/amd64/opt/bb/lib64/mlfi
+-I/bb/bigstorq3/qfdlibci/qfd/qfd_external.git/libs/boost/dist/1.56.0/include
+-I/bb/build/Linux-x86_64-64/release/robolibs/source/lib/dpkgroot/opt/bb/include
+-I/bb/build/Linux-x86_64-64/release/robolibs/source/lib/dpkgroot/opt/bb/include/stlport
+-I/bb/build/Linux-x86_64-64/release/robolibs/source/share/include/00depbuild
+-I/bb/build/Linux-x86_64-64/release/robolibs/source/share/include/00deployed
+-I/bb/build/Linux-x86_64-64/release/robolibs/source/share/include/00offlonly
+-I/bb/build/share/stp/include/00offlonly
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_breg/qfd_breg_wrapper
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_core/robo/quantcore
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_equity/Equity
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_equity/Equity/common
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_equity/Equity/local_vol
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_equity/Equity/qrdqnt
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_equity/robo/quantcore
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_equity_hybrid_transitional
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_fx/robo/quantcore
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_hybrid/cpp/gen2
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_hybrid/cpp/lmm
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_hybrid_converters
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_infrastructure/robo/quantcore
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_market/robo/quantcore
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_mathutil
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_mathutil/robo/quantcore
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_mathutil/robo/quantquad
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/libs/qfd_poly_var
+-I/bbshr/ird/hw2f/dlib/rel_candidate/qfd-v3.36.3/src/plugins

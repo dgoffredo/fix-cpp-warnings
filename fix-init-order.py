@@ -251,6 +251,8 @@ if __name__ == '__main__':
         if filename != filepath:
             printf('Skipping file {}', filename)
             continue
+        elif len(rewrites) == 0:
+            continue
         with open(filename, 'r') as fin:
             with open(filename + '.rewrite', 'w') as fout:
                 rewrite(fin, fout, rewrites)

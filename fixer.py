@@ -35,7 +35,7 @@ class Fixer(object):
             printf('\n')
         
         didFindError = _printErrors(self.transUnit, fileprinter.printerr)
-        if didFindError:
+        if didFindError and not self.args.ignoreErrors:
             sys.exit('FATAL One or more errors found in compilation unit.')
 
         return self.args, self.transUnit
@@ -52,6 +52,8 @@ def _addDefaultArgs(parser):
                         help='Path to a file containing clang compiler flags separated by newlines.')
     parser.add_argument('--verbose', '-v', action='count',
                         help='Log to stdout verbosely.')
+    parser.add_argument('--ignore-errors', dest='ignoreErrors', action='count',
+                        help="Don't quit after encountering a compiler error.")
 
 def _getFlagsFromFile(name):
     with open(name, 'r') as file:

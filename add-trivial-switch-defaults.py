@@ -100,8 +100,9 @@ if __name__ == '__main__':
 
     rewrites = [getSwitchRewrite(cursor, printerr) for cursor in finder.cursors.itervalues()]
 
-    fin = open(filepath, 'r')
-    fout = open(filepath + '.rewrite', 'w')
-    from rewrite import rewrite
-    rewrite(fin, fout, rewrites)
+    if len(rewrites) > 0:
+        fin = open(filepath, 'r')
+        fout = open(filepath + '.rewrite', 'w')
+        from rewrite import rewrite
+        rewrite(fin, fout, rewrites)
 
