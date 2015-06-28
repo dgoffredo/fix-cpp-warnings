@@ -32,7 +32,7 @@ class Fixer(object):
 
         if self.args.verbose:
             traverse(self.transUnit.cursor, TreePrinter())
-            printf('\n')
+            fileprinter.printf('\n')
         
         didFindError = _printErrors(self.transUnit, fileprinter.printerr)
         if didFindError and not self.args.ignoreErrors:
