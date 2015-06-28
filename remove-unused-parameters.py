@@ -3,11 +3,6 @@
 from clangwrapper import CursorKind, Cursor, Diagnostic, HashableCursor
 from observer import traverse, Observer, ObserverGroup, printCursor
 
-def getTransUnit(filepath, flags):
-    index = Index.create()
-    transUnit = index.parse(filepath, flags)
-    return transUnit
-
 class Function:
     def __init__(self, cursor):
         self.cursor = cursor
@@ -39,17 +34,6 @@ def isFunction(cursor):
                            CursorKind.FUNCTION_TEMPLATE,
                            CursorKind.FUNCTION_DECL,
                            CursorKind.CONSTRUCTOR]
-
-def printErrors(transUnit):
-    didFindError = False
-    for diag in transUnit.diagnostics:
-        if diag.severity >= Diagnostic.Error:
-            didFindError = True
-        printerr('**** {}', diag)
-        for fix in diag.fixits:
-            printerr(' ****     possible fix --> {}', fix)
-
-    return didFindError
 
 # Don't let it fool you -- it's just a list with some convenience methods:
 #     Stack.push(item)
