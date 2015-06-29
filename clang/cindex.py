@@ -1467,12 +1467,12 @@ class Cursor(Structure):
         for child in self.get_children():
             for descendant in child.walk_preorder():
                 yield descendant
-    '''
-    This "native" version is bugged. It gives the wrong tokens sometimes.
-    I've replaced it below with a more naive version that goes through
-    all of the tokens in the translation unit and yields only those within
-    this cursor's extent. Seems to work fine.
 
+    # This "native" version is bugged. It gives the wrong tokens sometimes.
+    # I've replaced it below with an extended version that goes through
+    # the tokens returned by the original version and yields only those 
+    # actually within this cursor's extent. Seems to work fine.
+    '''
     def get_tokens(self):
         """Obtain Token instances formulating that compose this Cursor.
 
@@ -1483,25 +1483,34 @@ class Cursor(Structure):
     '''
 
     # This version of get_tokens is not original to cindex.py.
-    # I added it later.
+    # I added it.
     #
     def get_tokens(self):
-        """ Let's see if this naive and ineffient version avoids 
-            the native version's bug.
+        """ Let's see if this filtered version avoids 
+            the native version's bug(s).
         """
 
         def nameOrBlank(x):
             return x.name if x else ''
 
-        tuTokens = self._tu.get_tokens(extent=self._tu.cursor.extent)
+        # tokens = self._tu.get_tokens(extent=self._tu.cursor.extent)
+        # Filtering the whole translation unit was too expensive. Let's
+        # instead hope that the native implementation gives us at least a
+        # superset of the tokens we need. Then we can filter away the extra.
+        #
+        tokens = TokenGroup.get_tokens(self._tu, self.extent)
         myFilename = nameOrBlank(self.location.file)
         myStartOffset = self.extent.start.offset
         myEndOffset = self.extent.end.offset
-        for token in tuTokens:
+
+        for token in tokens:
             if nameOrBlank(token.location.file) == myFilename \
                and token.extent.start.offset >= myStartOffset \
                and token.extent.end.offset <= myEndOffset:
-               yield token
+                yield token # Found one!
+            elif nameOrBlank(token.location.file) == myFilename \
+                 and token.extent.start.offset > myEndOffset:
+                    return # Missed it. This ought to be an error.
 
     def is_bitfield(self):
         """

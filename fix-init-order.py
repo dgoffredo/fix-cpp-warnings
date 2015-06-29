@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from clangwrapper import CursorKind, Cursor, HashableCursor
-from observer import traverse, Observer, ObserverGroup
+from observer import traverse, Observer, ObserverGroup, printCursor
 from collections import defaultdict
 import fixer
 
@@ -15,6 +15,9 @@ def isRecordDef(kind):
 def nameOrBlank(x):
     return x.name if x else ''
 
+def notOnWhitelist(file, whitelist):
+    return len(whitelist) > 0 and nameOrBlank(file) not in whitelist
+
 from pprint import pprint
 
 class FieldFinder(Observer):
@@ -26,7 +29,7 @@ class FieldFinder(Observer):
         self.fieldOrders = {} # Where each field is in its initializer list
 
     def observe(self, cursor):
-        if nameOrBlank(cursor.location.file) not in self._whitelist:
+        if notOnWhitelist(cursor.location.file, self._whitelist):
             return
 
         if isRecordDef(cursor.kind):
@@ -37,7 +40,7 @@ class FieldFinder(Observer):
             fields.append(cursor)
 
     def popTo(self, cursor):
-        if nameOrBlank(cursor.location.file) not in self._whitelist:
+        if notOnWhitelist(cursor.location.file, self._whitelist):
             return
 
         if isRecordDef(cursor.kind):
@@ -68,8 +71,15 @@ class InitMember:
         return not self == other
 
 def extentIsBetween(test, begin, end):
-    return test.extent.start.offset >= begin.extent.start.offset \
-           and test.extent.end.offset <= end.extent.end.offset
+    isBetween = test.extent.start.offset >= begin.extent.start.offset \
+                and test.extent.start.offset <= end.extent.start.offset
+    if isBetween:
+        printf('"{}" is between offset {} and offset {}', 
+               test.spelling, 
+               begin.extent.start.offset,
+               end.extent.end.offset)
+
+    return isBetween
 
 def isCppStyleComment(token):
     return token.kind.name == 'COMMENT' and token.spelling[:2] == '//'
@@ -139,7 +149,7 @@ class InitFinder(Observer):
         self._prevMemberOfConstructor = None # Done with that guy
 
     def observe(self, cursor):
-        if nameOrBlank(cursor.location.file) not in self._whitelist:
+        if notOnWhitelist(cursor.location.file, self._whitelist):
             return
 
         if cursor.kind == CursorKind.CONSTRUCTOR:
@@ -163,12 +173,14 @@ class InitFinder(Observer):
                 self._updatePreviousMemberOfConstructor(cursor)
             elif cursor.kind == CursorKind.UNEXPOSED_EXPR \
              and cursor.extent.start == cursor.extent.end:
-                printerr('Warning: This node could be crap')
+                pass
+                # zero-extent unexposed expression (most likely "()"). Bug?
+                # printerr('Warning: This node could be crap')
 
             self._prevChildOfConstructor = cursor
 
     def popTo(self, cursor):
-        if nameOrBlank(cursor.location.file) not in self._whitelist:
+        if notOnWhitelist(cursor.location.file, self._whitelist):
             return
 
         if cursor.kind == CursorKind.CONSTRUCTOR:
@@ -182,7 +194,7 @@ class InitFinder(Observer):
             self._depthWithinConstructor -= 1
 
     def pushFrom(self, cursor):
-        if nameOrBlank(cursor.location.file) not in self._whitelist:
+        if notOnWhitelist(cursor.location.file, self._whitelist):
             return
 
         if cursor.kind == CursorKind.CONSTRUCTOR:
@@ -229,7 +241,17 @@ class MisorderedInitMember:
 def misorderedInitMembers(fields, inits):
     orders = fields.fieldOrders
     def lookupOrder(member):
-        return orders[HashableCursor(member.cursor.get_definition())]
+        order = orders.get(HashableCursor(member.cursor.get_definition()))
+        if order is None:
+            printerr('The following cursor:')
+            printCursor(member.cursor, printerr)
+            printerr('with definition:')
+            printCursor(member.cursor.get_definition(), printerr)
+            printerr('is not in my catalog of fields.')
+            import sys
+            sys.exit('Encountered an unexpected constructor init field')
+        return order
+
     for constructor, fields in inits.constructorFields.iteritems():
         sortedCopy = list(sorted(fields, key=lookupOrder))
         assert len(sortedCopy) == len(fields)
@@ -271,10 +293,12 @@ if __name__ == '__main__':
     printf = fileprinter.printf if args.verbose else doNothing
     printerr = fileprinter.printerr
  
-    import re
-    fileWhitelist = set([re.sub(r'\.cpp$', '.h', filepath),
-                         re.sub(r'\.h$', '.cpp', filepath)])
+    # import re
+    # fileWhitelist = set([re.sub(r'\.cpp$', '.h', filepath),
+    #                      re.sub(r'\.h$', '.cpp', filepath)])
     
+    # Empty whitelist means "accept all the files"
+    fileWhitelist = set()
 
     fields = FieldFinder(fileWhitelist)
     inits = InitFinder(fileWhitelist)

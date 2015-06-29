@@ -60,3 +60,7 @@ target/
 *.swp
 *.swo
 *.swn
+
+# Rewriter stuff
+*.rewrite
+
