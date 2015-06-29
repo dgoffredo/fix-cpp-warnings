@@ -20,7 +20,7 @@ This script might insert some empty lines between moved initializers, depending 
 #### Purpose
 This is for `-Wunused-parameter`, when you give a name to a function parameter in the function's definition, but then don't use the variable in the function. This script will remove the _name_ (not the type) of the parameter in the function definition.
 #### Comments
-The whitepsace that previously surrounded any parameter name removed will remain; e.g. in
+The whitespace that previously surrounded any parameter name removed will remain; e.g. in
 `int foo(int x, int y) { ... }` → `int foo(int , int y) { ... }` if the parameter `x` is removed. 
 Note the space remaining after the first `int`. I haven't yet thought of a safe way to remove that.
 
