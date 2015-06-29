@@ -44,10 +44,6 @@ class InitMember:
         self.filename = cursor.location.file.name
         self.beginOffset = cursor.extent.start.offset
         self.endOffset = None # later
-        # Note: My endOffset is one-past-last. This is *different* from what
-        #       cursor.extent.end.offset gives you. InitMember's end is
-        #       exclusive, while the cursor's is inclusive.
-
         self.text = None # later
 
     def __repr__(self):
@@ -61,10 +57,15 @@ class InitMember:
     def __ne__(self, other):
         return not self == other
 
+def extentIsBetween(test, begin, end):
+    return test.extent.start.offset >= begin.extent.start.offset \
+           and test.extent.end.offset <= end.extent.end.offset
+
 class InitFinder(Observer):
     def __init__(self):
         super(InitFinder, self).__init__()
         self._currentConstructor = None
+        self._currentConstructorTokens = None
         self.constructorFields = defaultdict(list)
         self._depthWithinConstructor = None # None if at or above. >= 1 if below.
         self._prevChildOfConstructor = None # Last seen immediate child.
@@ -73,40 +74,34 @@ class InitFinder(Observer):
     def _inConstructorChildren(self):
         return self._depthWithinConstructor == 1
 
-    def _updatePreviousMemberOfConstructor(self):
+    def _updatePreviousMemberOfConstructor(self, currentCursor):
         if self._prevMemberOfConstructor is None:
             return # Nothing to update
+
+        assert self._currentConstructor is not None
 
         prevChild, prevMember = self._prevChildOfConstructor, self._prevMemberOfConstructor
         assert prevChild != prevMember.cursor
 
-        children = list(prevChild.get_children())
-        if len(children) == 0:
-            # Danger -- experimental
-            if prevChild.extent.end.offset == 0: # Which would be nonsense.
-                # Assume we had something like "field()," and so go up to the
-                # comma. There may still be issues with whitespace. Beware!
-                # TODO Use the tokens of the constructor to actually go to
-                #      the next comma or opening brace.
-                prevMember.endOffset = prevMember.cursor.extent.end.offset + 2
-            else:
-                prevMember.endOffset = prevChild.extent.end.offset + 1 
-            # See note in class InitMember if you're wondering about the +1
-        else:
-            # Use the end of the last child of the previous item 
-            # in the current constructor. Often the marked end of
-            # prevChild is wrong, but children[-1] is right.
-            #
-            prevMember.endOffset = children[-1].extent.end.offset + 1
-        
+        separatorsBetween = [tok for tok in self._currentConstructorTokens \
+                             if extentIsBetween(tok, prevMember.cursor, currentCursor) \
+                             and tok.spelling in (',', '{')]
+        assert len(separatorsBetween) > 0
+        # TODO: Actually, what if you open the source file and 
+        #       move back to the beginning ofthe last whitespace, 
+        #       if it exists. That'd be perfect.
+        #
+        prevMember.endOffset = separatorsBetween[-1].extent.start.offset
+
         self._prevMemberOfConstructor = None # Done with that guy
 
     def observe(self, cursor):
         if cursor.kind == CursorKind.CONSTRUCTOR:
             self._currentConstructor = HashableCursor(cursor)
+            self._currentConstructorTokens = list(cursor.get_tokens())
         elif self._inConstructorChildren():
             if cursor.kind == CursorKind.MEMBER_REF:
-                self._updatePreviousMemberOfConstructor()
+                self._updatePreviousMemberOfConstructor(cursor)
                 member = InitMember(cursor)
                 self.constructorFields[self._currentConstructor].append(member)
                 self._prevMemberOfConstructor = member
@@ -119,7 +114,7 @@ class InitFinder(Observer):
             #    class constructor, so same situation as TYPE_REF.
             #
             elif cursor.kind in (CursorKind.COMPOUND_STMT, CursorKind.TYPE_REF, CursorKind.NAMESPACE_REF):
-                self._updatePreviousMemberOfConstructor()
+                self._updatePreviousMemberOfConstructor(cursor)
             elif cursor.kind == CursorKind.UNEXPOSED_EXPR \
              and cursor.extent.start == cursor.extent.end:
                 printerr('Warning: This node could be crap')
@@ -131,6 +126,7 @@ class InitFinder(Observer):
             assert self._currentConstructor == cursor
             self._depthWithinConstructor = None
             self._currentConstructor = None
+            self._currentConstructorTokens = None
             self._prevChildOfConstructor = None
             self._prevMemberOfConstructor = None
         elif self._depthWithinConstructor is not None:
