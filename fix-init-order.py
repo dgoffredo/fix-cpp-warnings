@@ -154,7 +154,7 @@ class InitFinder(Observer):
     # When the InitFinder is done, it contains a bunch of
     # (cursor, filename, begin, end) objects designating
     # where the member initializers are. This function opens
-    # the apprioriate files and reads the text corresponding to
+    # the appropriate files and reads the text corresponding to
     # each member initializer, and writes it to the initializer's
     # .text attribute.
     #

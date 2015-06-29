@@ -62,12 +62,14 @@ def getSwitchRewrite(switchCursor, printerr):
         printerr("The body of this switch doesn't have any children. What the hell.")
         return None
 
-    lastChild = children[-1]
-    offset = list(lastChild.get_tokens())[-1].extent.end.offset
+    bodyTokens = list(body.get_tokens())
+    assert len(bodyTokens) > 1
+    offset = bodyTokens[-2].extent.end.offset
 
     def isCase(cursor):
         return cursor.kind == CursorKind.CASE_STMT
         
+    lastChild = children[-1]
     cursorToBeBelow = firstWith(reversed(children), isCase) or lastChild
     indentation = repeatedString(' ', cursorToBeBelow.location.column - 1)
 
