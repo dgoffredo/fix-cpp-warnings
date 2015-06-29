@@ -2,9 +2,8 @@
 import clang
 from clang.cindex import *
 
-# This is where the matching version of libclang.so is
-# on adslnydnlpap01 (and probably most other linux machines,
-# according to Andrew Paprocki)
+# Put the directory of your libclang.so here:
+#
 Config.set_library_path('/opt/bb/lib64') 
 
 # clang.cindex.Cursor has a hash property (a wrapper around a clang hash)
