@@ -86,6 +86,8 @@ class InitFinder(Observer):
             if prevChild.extent.end.offset == 0: # Which would be nonsense.
                 # Assume we had something like "field()," and so go up to the
                 # comma. There may still be issues with whitespace. Beware!
+                # TODO Use the tokens of the constructor to actually go to
+                #      the next comma or opening brace.
                 prevMember.endOffset = prevMember.cursor.extent.end.offset + 2
             else:
                 prevMember.endOffset = prevChild.extent.end.offset + 1 
@@ -120,16 +122,13 @@ class InitFinder(Observer):
                 self._updatePreviousMemberOfConstructor()
             elif cursor.kind == CursorKind.UNEXPOSED_EXPR \
              and cursor.extent.start == cursor.extent.end:
-                printerr('!!! Warning: This node could be crap')
+                printerr('Warning: This node could be crap')
 
             self._prevChildOfConstructor = cursor
 
     def popTo(self, cursor):
         if cursor.kind == CursorKind.CONSTRUCTOR:
-            if self._currentConstructor != cursor:
-                raise ValueError('''Error: cursor={} _currentConstructor={} 
-                                 should be equal'''.format(cursor.displayname, 
-                                                           self._currentConstructor.displayname))
+            assert self._currentConstructor == cursor
             self._depthWithinConstructor = None
             self._currentConstructor = None
             self._prevChildOfConstructor = None
@@ -139,11 +138,8 @@ class InitFinder(Observer):
 
     def pushFrom(self, cursor):
         if cursor.kind == CursorKind.CONSTRUCTOR:
+            assert self._currentConstructor == cursor
             self._depthWithinConstructor = 1
-            if self._currentConstructor != cursor:
-                raise ValueError('''Error: cursor={} _currentConstructor={} 
-                                 should be equal'''.format(cursor.displayname, 
-                                                           self._currentConstructor.displayname))
         elif self._depthWithinConstructor is not None:
             self._depthWithinConstructor += 1
 

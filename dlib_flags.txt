@@ -18,6 +18,17 @@
 -I/usr/lib/gcc/x86_64-redhat-linux6E/4.4.6/include
 
 -I.
+-I/home/dgoffred/mbig/git/dlib/services/s_dervdg
+-I/home/dgoffred/mbig/git/dlib/services/s_dlibmg
+-I/home/dgoffred/mbig/git/dlib/services/s_dlibst
+-I/home/dgoffred/mbig/git/dlib/services/s_dlibxl
+-I/home/dgoffred/mbig/git/dlib/services/s_dlibxp
+-I/home/dgoffred/mbig/git/dlib/services/s_exdl
+-I/home/dgoffred/mbig/git/dlib/services/s_ibox
+-I/home/dgoffred/mbig/git/dlib/services/s_lspdbsvc
+-I/home/dgoffred/mbig/git/dlib/services/s_lxfidata
+-I/home/dgoffred/mbig/git/dlib/services/s_otccal
+-I/home/dgoffred/mbig/git/dlib/services/s_otcdsp
 -I/home/dgoffred/mbig/git/dlib/dlibclient
 -I/home/dgoffred/mbig/git/dlib/xassetcalcapi
 -I/home/dgoffred/mbig/git/dlib/blan/src/bde/bbedc

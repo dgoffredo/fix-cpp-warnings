@@ -152,7 +152,7 @@ def eponymousToken(cursor):
     # "assert" might be too harsh.
     # assert len(matches) > 0
     if len(matches) == 0:
-        printerr('ERROR The following cursor does not have an eponymous token:')
+        printerr('WARNING The following cursor does not have an eponymous token:')
         printerr(cursor.location.file.name)
         printCursor(cursor, printerr)
         return None

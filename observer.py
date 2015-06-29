@@ -52,7 +52,7 @@ import fileprinter
 def repeatedString(s, n):
     return ''.join(s for _ in range(n))
 
-def printCursor(c, printer=fileprinter.printf, indentLevel=0, tabWidth=4, tokenLineLimit=70):
+def printCursor(c, printer=fileprinter.printf, indentLevel=0, tabWidth=4, tokenLineLimit=100):
     indent = repeatedString(' ', indentLevel * tabWidth)
     tokensRep = ' '.join('"{}"'.format(token.spelling) \
                          for token in c.get_tokens())
