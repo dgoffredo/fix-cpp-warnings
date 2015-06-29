@@ -14,7 +14,7 @@ Clang-based rewriters (in python) for the more easily fixed issues diagnosed by 
 #### Purpose
 This is for `-Wreorder`, when the compiler warns `"memberX will be initialized before memberY when initialized here..."`. That's telling you that the order of a class's members in the class definition is different than it is in a particular initializer list. See http://stackoverflow.com/questions/1828037/whats-the-point-of-g-wreorder . This script will reorder the initializers _in the constructor_.
 #### Comments
-Watch out for false edits using this script. It's a little tricky.
+This script might insert some empty lines between moved initializers, depending on the placement of comments in the original source.
 
 ## remove-unused-parameters.py
 #### Purpose
