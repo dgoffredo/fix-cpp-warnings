@@ -100,7 +100,7 @@ class InitFinder(Observer):
         # a cppStyleComment.
         #
         tokIndex = tokensBetween.index(lastSeparator)
-        if tokIndex == 0 or not isCppStyleComment(tokensBetween[tokIndex - 1]):
+        if tokIndex != 0 and not isCppStyleComment(tokensBetween[tokIndex - 1]):
             tokJustBefore = tokensBetween[tokIndex - 1]
             # Eat whitespace
             printf('For member "{}" I\'m backing up to the token "{}"', 
