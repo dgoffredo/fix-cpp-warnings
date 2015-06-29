@@ -1,7 +1,7 @@
 # Precompiler macros
 #
 -DBB64BIT
--DBAS_NOBBENV 
+# -DBAS_NOBBENV  # Commented out for the tasks' sakes
 -D_LINUX_SOURCE
 
 # BSL_OVERRIDES_STD isn't necessary for linux builds,

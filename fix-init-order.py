@@ -12,16 +12,23 @@ def isRecordDef(kind):
                     CursorKind.CLASS_TEMPLATE,
                     CursorKind.STRUCT_DECL)
 
+def nameOrBlank(x):
+    return x.name if x else ''
+
 from pprint import pprint
 
 class FieldFinder(Observer):
-    def __init__(self):
+    def __init__(self, whitelist):
         super(FieldFinder, self).__init__()
+        self._whitelist = whitelist
         self.classFields = defaultdict(list)
         self.classes = []
         self.fieldOrders = {} # Where each field is in its initializer list
 
     def observe(self, cursor):
+        if nameOrBlank(cursor.location.file) not in self._whitelist:
+            return
+
         if isRecordDef(cursor.kind):
             self.classes.append(HashableCursor(cursor))
         elif cursor.kind == CursorKind.FIELD_DECL:
@@ -30,6 +37,9 @@ class FieldFinder(Observer):
             fields.append(cursor)
 
     def popTo(self, cursor):
+        if nameOrBlank(cursor.location.file) not in self._whitelist:
+            return
+
         if isRecordDef(cursor.kind):
             assert self.classes[-1] == cursor
             self.classes.pop()
@@ -65,8 +75,9 @@ def isCppStyleComment(token):
     return token.kind.name == 'COMMENT' and token.spelling[:2] == '//'
 
 class InitFinder(Observer):
-    def __init__(self):
+    def __init__(self, whitelist):
         super(InitFinder, self).__init__()
+        self._whitelist = whitelist
         self._currentConstructor = None
         self._currentConstructorTokens = None
         self.constructorFields = defaultdict(list)
@@ -81,17 +92,28 @@ class InitFinder(Observer):
         if self._prevMemberOfConstructor is None:
             return # Nothing to update
 
+        # If we're updating the previous constructor member, then we must
+        # have a current constructor.
         assert self._currentConstructor is not None
 
         prevChild, prevMember = self._prevChildOfConstructor, self._prevMemberOfConstructor
+        # A member initializer can't be by itself in an initializer list
+        # (it must at least have a '()' following it, so it can't be that
+        # the previous //child// is the same as the previous //member//. That
+        # would mean that there was no child between now and the previous 
+        # member.
         assert prevChild != prevMember.cursor
 
         tokensBetween = [tok for tok in self._currentConstructorTokens \
                          if extentIsBetween(tok, prevMember.cursor, currentCursor)]
+        # For the same reason as above, there must be tokens between now and
+        # the previous member.
         assert len(tokensBetween) > 0
 
         separatorsBetween = [tok for tok in tokensBetween \
                              if tok.spelling in (',', '{')]
+        # There has to be either a ',' or a '{' between the previous member
+        # and now (inclusive -- important for the case where now is '{').
         assert len(separatorsBetween) > 0
         lastSeparator = separatorsBetween[-1]
 
@@ -117,6 +139,9 @@ class InitFinder(Observer):
         self._prevMemberOfConstructor = None # Done with that guy
 
     def observe(self, cursor):
+        if nameOrBlank(cursor.location.file) not in self._whitelist:
+            return
+
         if cursor.kind == CursorKind.CONSTRUCTOR:
             self._currentConstructor = HashableCursor(cursor)
             self._currentConstructorTokens = list(cursor.get_tokens())
@@ -143,6 +168,9 @@ class InitFinder(Observer):
             self._prevChildOfConstructor = cursor
 
     def popTo(self, cursor):
+        if nameOrBlank(cursor.location.file) not in self._whitelist:
+            return
+
         if cursor.kind == CursorKind.CONSTRUCTOR:
             assert self._currentConstructor == cursor
             self._depthWithinConstructor = None
@@ -154,6 +182,9 @@ class InitFinder(Observer):
             self._depthWithinConstructor -= 1
 
     def pushFrom(self, cursor):
+        if nameOrBlank(cursor.location.file) not in self._whitelist:
+            return
+
         if cursor.kind == CursorKind.CONSTRUCTOR:
             assert self._currentConstructor == cursor
             self._depthWithinConstructor = 1
@@ -239,9 +270,14 @@ if __name__ == '__main__':
     import fileprinter
     printf = fileprinter.printf if args.verbose else doNothing
     printerr = fileprinter.printerr
-   
-    fields = FieldFinder()
-    inits = InitFinder()
+ 
+    import re
+    fileWhitelist = set([re.sub(r'\.cpp$', '.h', filepath),
+                         re.sub(r'\.h$', '.cpp', filepath)])
+    
+
+    fields = FieldFinder(fileWhitelist)
+    inits = InitFinder(fileWhitelist)
     observers = ObserverGroup([fields, inits])
 
     traverse(transUnit.cursor, observers)
