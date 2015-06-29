@@ -14,7 +14,7 @@ Clang-based rewriters (in python) for the more easily fixed issues diagnosed by 
 #### Purpose
 This is for `-Wreorder`, when the compiler warns `"memberX will be initialized before memberY when initialized here..."`. That's telling you that the order of a class's members in the class definition is different than it is in a particular initializer list. See http://stackoverflow.com/questions/1828037/whats-the-point-of-g-wreorder . This script will reorder the initializers _in the constructor_.
 #### Comments
-The "extent" and "token" information provided by clang is sometimes incorrect. Unfortunately I've found that in real code this script seldom does the correct thing. Use with caution. 
+Watch out for false edits using this script. It's a little tricky.
 
 ## remove-unused-parameters.py
 #### Purpose
@@ -29,5 +29,3 @@ Note the space remaining after the first `int`. I haven't yet thought of a safe 
 This is for `-Wswitch`, when you have a `switch` on an `enum` type, and do not handle each of the possible `case`s, and don't have a `default` case. This script will add a `default: break;` to the end of the switch.
 #### Comments
 Adding a quiet `default` will make explicit what these warning-producing switches were doing implicitly already, but that does not mean it is the best solution. Review any modifications made by this script and see whether a `default` case is appropriate for your switches.
-
-Also, there's a bug in the clang bindings used by these scripts that causes AST nodes to sometimes report having more tokens than they actually do. As a result, `remove-unused-parameters.py` issues incorrect rewrites in situations where the last child of the `switch`'s body (i.e. the last `case`) ends with a `}` rather than a `;`. This is somewhat uncommon, since there is usually a `break;` following the closing `}`, but this is still a bug.
