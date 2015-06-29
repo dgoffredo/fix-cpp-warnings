@@ -61,6 +61,9 @@ def extentIsBetween(test, begin, end):
     return test.extent.start.offset >= begin.extent.start.offset \
            and test.extent.end.offset <= end.extent.end.offset
 
+def isCppStyleComment(token):
+    return token.kind.name == 'COMMENT' and token.spelling[:2] == '//'
+
 class InitFinder(Observer):
     def __init__(self):
         super(InitFinder, self).__init__()
@@ -83,15 +86,33 @@ class InitFinder(Observer):
         prevChild, prevMember = self._prevChildOfConstructor, self._prevMemberOfConstructor
         assert prevChild != prevMember.cursor
 
-        separatorsBetween = [tok for tok in self._currentConstructorTokens \
-                             if extentIsBetween(tok, prevMember.cursor, currentCursor) \
-                             and tok.spelling in (',', '{')]
+        tokensBetween = [tok for tok in self._currentConstructorTokens \
+                         if extentIsBetween(tok, prevMember.cursor, currentCursor)]
+        assert len(tokensBetween) > 0
+
+        separatorsBetween = [tok for tok in tokensBetween \
+                             if tok.spelling in (',', '{')]
         assert len(separatorsBetween) > 0
-        # TODO: Actually, what if you open the source file and 
-        #       move back to the beginning ofthe last whitespace, 
-        #       if it exists. That'd be perfect.
+        lastSeparator = separatorsBetween[-1]
+
+        # We want to consume whitespace before lastSeparatorBegin,
+        # but only if the previous token (if one exists) is not
+        # a cppStyleComment.
         #
-        prevMember.endOffset = separatorsBetween[-1].extent.start.offset
+        tokIndex = tokensBetween.index(lastSeparator)
+        if tokIndex == 0 or not isCppStyleComment(tokensBetween[tokIndex - 1]):
+            tokJustBefore = tokensBetween[tokIndex - 1]
+            # Eat whitespace
+            printf('For member "{}" I\'m backing up to the token "{}"', 
+                   prevMember.cursor.spelling,
+                   tokJustBefore.spelling)
+            prevMember.endOffset = tokJustBefore.extent.end.offset
+        else:
+            # Don't eat whitespace
+            printf('For member "{}" I\'m sticking with token "{}"', 
+                   prevMember.cursor.spelling,
+                   lastSeparator.spelling)
+            prevMember.endOffset = lastSeparator.extent.start.offset
 
         self._prevMemberOfConstructor = None # Done with that guy
 
