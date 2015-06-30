@@ -24,8 +24,8 @@ if __name__ == '__main__':
     #     printToken(token)
 
     # If --verbose was passed, then we already printed the tree. If not,
-    # then we print the tree here.
+    # then we print the tree here, and restrict it to the specified file.
     #
     if not args.verbose:
-        traverse(translationUnit.cursor, TreePrinter())
+        traverse(translationUnit.cursor, TreePrinter(whitelist=set([util.filepath])))
 

@@ -80,21 +80,34 @@ def printCursor(c, printer=fileprinter.printf, indentLevel=0, tabWidth=4, tokenL
         tokensRep = tokensRep[:excerptSize] + etc + tokensRep[-excerptSize:]
     printer('{}{}', indent, tokensRep)
 
+def nameOrBlank(file):
+    return file.name if file else ''
 
 # Print the AST as you go. 
 #
 class TreePrinter(Observer):
-    def __init__(self, outFile=sys.stdout):
+    def __init__(self, outFile=sys.stdout, whitelist=set()):
         super(TreePrinter, self).__init__()
         self.indentLevel = 0
         self.printf = fileprinter.FilePrinter(outFile)
+        self.whitelist = whitelist
+
+    def _ignore(self, c):
+        return len(self.whitelist) > 0 \
+            and nameOrBlank(c.location.file) not in self.whitelist
 
     def observe(self, c):
+        if self._ignore(c):
+            return
         printCursor(c, printer=self.printf, indentLevel=self.indentLevel)
 
     def pushFrom(self, cursor):
+        if self._ignore(cursor):
+            return
         self.indentLevel += 1
 
     def popTo(self, cursor):
+        if self._ignore(cursor):
+            return
         self.indentLevel -= 1
 
